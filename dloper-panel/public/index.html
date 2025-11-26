@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dloper Panel</title>
+  <style>
+    :root { --bg:#0b0f16; --card:#111827; --text:#e2e8f0; --muted:#94a3b8; --border:#1f2937; --accent:#22d3ee; }
+    *{box-sizing:border-box}body{margin:0;font-family:'Inter',system-ui;background:var(--bg);color:var(--text);}header{padding:16px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;background:#0f172a;position:sticky;top:0;z-index:5;}main{max-width:1200px;margin:20px auto;padding:0 16px 40px;display:grid;gap:16px;} .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;}h2{margin-top:0;}button{background:linear-gradient(135deg,#60a5fa,#22d3ee);border:none;color:#0b0f16;padding:8px 12px;border-radius:10px;font-weight:700;cursor:pointer;}table{width:100%;border-collapse:collapse;margin-top:8px;}td,th{padding:8px;border-bottom:1px solid var(--border);}th{text-align:left;color:var(--muted);} .flex{display:flex;align-items:center;gap:10px;flex-wrap:wrap;} .muted{color:var(--muted);} .list{display:grid;gap:6px;} input{padding:8px;border-radius:8px;border:1px solid var(--border);background:#0b0f16;color:var(--text);} .monospace{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,"Liberation Mono","Courier New", monospace;font-size:0.9rem;} .pill{display:inline-flex;padding:4px 8px;border-radius:20px;background:#0f172a;border:1px solid var(--border);} .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;}
+  </style>
+</head>
+<body>
+  <header>
+    <div><strong>Dloper Panel</strong></div>
+    <div class="muted">Local-M1 Admin</div>
+  </header>
+  <main>
+    <section class="card">
+      <h2>System overview</h2>
+      <div id="system" class="grid"></div>
+    </section>
+
+    <section class="card">
+      <div class="flex">
+        <h2>Apps</h2>
+        <button onclick="refreshApps()">Refresh</button>
+      </div>
+      <table>
+        <thead><tr><th>Name</th><th>Status</th><th>Image</th><th>Actions</th></tr></thead>
+        <tbody id="apps"></tbody>
+      </table>
+    </section>
+
+    <section class="card">
+      <div class="flex">
+        <h2>Files</h2>
+        <input id="pathInput" placeholder="/" />
+        <button onclick="listFiles()">List</button>
+      </div>
+      <div id="files" class="list"></div>
+    </section>
+
+    <section class="card">
+      <h2>Network & Tailscale</h2>
+      <div id="tailscale" class="muted"></div>
+      <p class="muted">Run <span class="monospace">tailscale up --authkey &lt;key&gt;</span> on the host to join your tailnet.</p>
+    </section>
+  </main>
+
+  <script>
+    async function fetchJSON(path, options={}) {
+      const res = await fetch(path, { headers: { 'Content-Type': 'application/json' }, ...options });
+      if(!res.ok) throw new Error(await res.text());
+      return res.json();
+    }
+
+    async function loadSystem() {
+      const data = await fetchJSON('/api/system');
+      const sys = document.getElementById('system');
+      sys.innerHTML = '';
+      const items = [
+        ['Hostname', data.hostname],
+        ['Uptime (s)', data.uptime],
+        ['Load 1/5/15', `${data.load1.toFixed(2)} / ${data.load5.toFixed(2)} / ${data.load15.toFixed(2)}`],
+        ['Memory', `${Math.round(data.memory.used/1e6)}MB / ${Math.round(data.memory.total/1e6)}MB`],
+        ['CPUs', data.cpus],
+        ['Platform', `${data.platform} ${data.arch}`]
+      ];
+      items.forEach(([label, value]) => {
+        const card = document.createElement('div');
+        card.className = 'pill';
+        card.innerHTML = `<div><strong>${label}:</strong> ${value}</div>`;
+        sys.appendChild(card);
+      });
+    }
+
+    async function refreshApps() {
+      const tbody = document.getElementById('apps');
+      tbody.innerHTML='Loading...';
+      try {
+        const data = await fetchJSON('/api/apps');
+        tbody.innerHTML = '';
+        data.apps.forEach(app => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>${app.name}</td><td>${app.status}</td><td class="muted">${app.image}</td>`;
+          const actions = document.createElement('td');
+          ['start','stop','restart'].forEach(action => {
+            const btn = document.createElement('button');
+            btn.textContent = action;
+            btn.onclick = async () => {
+              await fetchJSON(`/api/apps/${app.name}/${action}`, { method:'POST' });
+              refreshApps();
+            };
+            actions.appendChild(btn);
+          });
+          tr.appendChild(actions);
+          tbody.appendChild(tr);
+        });
+      } catch (e) { tbody.innerHTML = `<tr><td colspan="4" class="muted">${e.message}</td></tr>`; }
+    }
+
+    async function listFiles() {
+      const pathInput = document.getElementById('pathInput');
+      const files = document.getElementById('files');
+      files.innerHTML = 'Loading...';
+      try {
+        const data = await fetchJSON(`/api/files?path=${encodeURIComponent(pathInput.value || '.')}`);
+        files.innerHTML = '';
+        data.entries.forEach(entry => {
+          const div = document.createElement('div');
+          div.className = 'pill';
+          div.textContent = `${entry.type === 'dir' ? '📁' : '📄'} ${entry.name}`;
+          files.appendChild(div);
+        });
+      } catch (e) { files.textContent = e.message; }
+    }
+
+    async function loadTailscale() {
+      const el = document.getElementById('tailscale');
+      const data = await fetchJSON('/api/tailscale');
+      el.textContent = `${data.status} — ${data.note || ''}`;
+    }
+
+    loadSystem();
+    refreshApps();
+    listFiles();
+    loadTailscale();
+    setInterval(loadSystem, 10000);
+  </script>
+</body>
+</html>

@@ -1,0 +1,1 @@
+This pi-gen stage installs Docker, Compose, Tailscale, and enables the dloper-compose systemd unit. Copy the Dloper OS repo into `/opt/dloper` in the final image (e.g., via an additional stage that copies your workspace into `${ROOTFS_DIR}/opt/dloper`).

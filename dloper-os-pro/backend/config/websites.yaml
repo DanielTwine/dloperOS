@@ -1,0 +1,21 @@
+websites:
+- name: demo-site
+  root_path: /Users/danieltwine/Documents/Coding Projects/dloper/dloperOS/dloper-os-pro/backend/data/sites/demo-site
+  domains:
+  - demo.local
+  ssl_enabled: false
+  upstream: null
+  analytics:
+    requests: 0
+    errors: 0
+    bandwidth_mb: 0.0
+- name: demo-sites
+  root_path: /Users/danieltwine/Documents/Coding Projects/dloper/dloperOS/dloper-os-pro/backend/data/sites/demo-sites
+  domains:
+  - demo2.local
+  ssl_enabled: true
+  upstream: null
+  analytics:
+    requests: 0
+    errors: 0
+    bandwidth_mb: 0.0

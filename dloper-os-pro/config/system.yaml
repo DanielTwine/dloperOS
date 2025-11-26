@@ -1,0 +1,8 @@
+instance:
+  name: DloperOS Pro
+  base_url: http://localhost:8000
+security:
+  secret_key: ""
+  token_expiry_minutes: 90
+analytics:
+  enabled: true

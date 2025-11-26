@@ -1,0 +1,15 @@
+[Unit]
+Description=Dloper OS docker compose stack
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/dloper
+ExecStart=/usr/bin/docker compose -f /opt/dloper/docker-compose/docker-compose.yml up -d
+RemainAfterExit=yes
+User=root
+Group=docker
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,11 @@
+websites:
+  - name: sample-site
+    root_path: data/sites/sample-site
+    domains:
+      - sample.local
+    ssl_enabled: false
+    upstream: null
+    analytics:
+      requests: 0
+      errors: 0
+      bandwidth_mb: 0.0

@@ -1,0 +1,127 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  TEACHER
+  STUDENT
+}
+
+enum SubmissionStatus {
+  PENDING
+  SUBMITTED
+  GRADED
+}
+
+enum BehaviourSeverity {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+model School {
+  id        Int      @id @default(autoincrement())
+  name      String
+  domain    String?
+  address   String?
+  createdAt DateTime @default(now())
+  users     User[]
+  classes   Class[]
+  behaviour BehaviourEvent[]
+}
+
+model User {
+  id           Int       @id @default(autoincrement())
+  email        String    @unique
+  passwordHash String
+  name         String
+  role         Role
+  school       School    @relation(fields: [schoolId], references: [id])
+  schoolId     Int
+  classesTaught Class[]  @relation("TeacherClasses")
+  enrolments   Enrolment[]
+  homeworkAssigned Homework[] @relation("AssignedBy")
+  homeworkSubmissions HomeworkSubmission[]
+  behaviourEvents     BehaviourEvent[] @relation("StudentBehaviour")
+  createdAt    DateTime @default(now())
+}
+
+model Class {
+  id        Int       @id @default(autoincrement())
+  name      String
+  code      String    @unique
+  school    School    @relation(fields: [schoolId], references: [id])
+  schoolId  Int
+  teacher   User      @relation("TeacherClasses", fields: [teacherId], references: [id])
+  teacherId Int
+  enrolments Enrolment[]
+  timetable TimetableEntry[]
+  homework  Homework[]
+  createdAt DateTime @default(now())
+}
+
+model Enrolment {
+  id        Int    @id @default(autoincrement())
+  class     Class  @relation(fields: [classId], references: [id])
+  classId   Int
+  student   User   @relation(fields: [studentId], references: [id])
+  studentId Int
+  createdAt DateTime @default(now())
+  @@unique([classId, studentId])
+}
+
+model TimetableEntry {
+  id        Int      @id @default(autoincrement())
+  class     Class    @relation(fields: [classId], references: [id])
+  classId   Int
+  dayOfWeek Int
+  startsAt  DateTime
+  endsAt    DateTime
+  room      String?
+  createdAt DateTime @default(now())
+}
+
+model Homework {
+  id          Int       @id @default(autoincrement())
+  class       Class     @relation(fields: [classId], references: [id])
+  classId     Int
+  title       String
+  description String
+  dueDate     DateTime
+  assignedBy  User      @relation("AssignedBy", fields: [assignedById], references: [id])
+  assignedById Int
+  submissions HomeworkSubmission[]
+  createdAt   DateTime @default(now())
+}
+
+model HomeworkSubmission {
+  id          Int       @id @default(autoincrement())
+  homework    Homework  @relation(fields: [homeworkId], references: [id])
+  homeworkId  Int
+  student     User      @relation(fields: [studentId], references: [id])
+  studentId   Int
+  status      SubmissionStatus @default(PENDING)
+  grade       String?
+  feedback    String?
+  submittedAt DateTime?
+  createdAt   DateTime @default(now())
+  @@unique([homeworkId, studentId])
+}
+
+model BehaviourEvent {
+  id          Int      @id @default(autoincrement())
+  school      School   @relation(fields: [schoolId], references: [id])
+  schoolId    Int
+  student     User     @relation("StudentBehaviour", fields: [studentId], references: [id])
+  studentId   Int
+  type        String
+  severity    BehaviourSeverity @default(LOW)
+  description String?
+  occurredAt  DateTime @default(now())
+}

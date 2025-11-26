@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dloper EDU Setup Wizard</title>
+  <style>
+    body { font-family:'Inter',system-ui,sans-serif; background:#0b0f16; color:#e2e8f0; display:flex; align-items:center; justify-content:center; min-height:100vh; margin:0; }
+    .card { width: min(480px, 90vw); background:#111827; padding:20px; border-radius:16px; border:1px solid #1f2937; box-shadow:0 20px 40px rgba(0,0,0,0.3); }
+    label { display:block; margin-bottom:10px; color:#94a3b8; }
+    input { width:100%; padding:10px; border-radius:10px; border:1px solid #1f2937; background:#0b0f16; color:#e2e8f0; }
+    button { width:100%; padding:12px; border:none; border-radius:10px; background:linear-gradient(135deg,#60a5fa,#22d3ee); color:#0b0f16; font-weight:700; cursor:pointer; }
+    .muted { color:#94a3b8; font-size:0.9rem; }
+    .status { margin-top:10px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>Set up your school</h2>
+    <p class="muted">Creates the school and first admin account in ClassConnect.</p>
+    <form id="wizardForm">
+      <label>School name<input name="schoolName" required></label>
+      <label>School domain (optional)<input name="schoolDomain"></label>
+      <label>Admin name<input name="adminName" required></label>
+      <label>Admin email<input name="adminEmail" type="email" required></label>
+      <label>Admin password<input name="adminPassword" type="password" required minlength="6"></label>
+      <button type="submit">Provision</button>
+    </form>
+    <div id="status" class="status muted"></div>
+  </div>
+
+  <script>
+    const form = document.getElementById('wizardForm');
+    const status = document.getElementById('status');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      status.textContent = 'Provisioning...';
+      const payload = Object.fromEntries(new FormData(form).entries());
+      try {
+        const res = await fetch('/api/setup/school', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed');
+        status.textContent = `School created. Admin: ${data.admin.email}. JWT issued.`;
+      } catch (err) {
+        status.textContent = err.message;
+      }
+    });
+  </script>
+</body>
+</html>

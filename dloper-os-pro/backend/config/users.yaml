@@ -1,0 +1,6 @@
+users:
+- username: admin
+  email: admin@example.com
+  role: owner
+  password_hash: pbkdf2$390000$0zFN5DedjwJDd189s1NaHg==$B61bHTuHac4POjxf85LzhtA1UakOlxEjQWk4oLTFJYs=
+  created_at: '2025-11-26T17:45:17.396609'

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ClassConnect</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">ClassConnect</div>
+    <div class="auth-state" id="authState"></div>
+  </header>
+
+  <main>
+    <section id="loginSection" class="card">
+      <h2>Sign in</h2>
+      <form id="loginForm">
+        <label>Email <input type="email" name="email" required></label>
+        <label>Password <input type="password" name="password" required></label>
+        <button type="submit">Login</button>
+      </form>
+      <p class="muted">Need an account? Ask your admin to register you.</p>
+    </section>
+
+    <section id="dashboard" class="card hidden">
+      <h2>Dashboard</h2>
+      <div id="stats" class="stat-grid"></div>
+    </section>
+
+    <section id="classes" class="card hidden">
+      <div class="section-header">
+        <h2>Your classes</h2>
+        <button id="newClassBtn" class="secondary">New class</button>
+      </div>
+      <div id="classList" class="list"></div>
+      <form id="newClassForm" class="inline-form hidden">
+        <input type="text" name="name" placeholder="Class name" required>
+        <input type="number" name="schoolId" placeholder="School ID" required>
+        <button type="submit">Create</button>
+      </form>
+    </section>
+
+    <section id="homework" class="card hidden">
+      <div class="section-header">
+        <h2>Homework</h2>
+        <button id="newHomeworkBtn" class="secondary">Assign</button>
+      </div>
+      <div id="homeworkList" class="list"></div>
+      <form id="newHomeworkForm" class="inline-form hidden">
+        <input type="number" name="classId" placeholder="Class ID" required>
+        <input type="text" name="title" placeholder="Title" required>
+        <input type="text" name="description" placeholder="Description" required>
+        <input type="date" name="dueDate" required>
+        <button type="submit">Create</button>
+      </form>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
