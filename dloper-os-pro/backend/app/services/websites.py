@@ -3,6 +3,9 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Dict, List, Optional
 
+import aiofiles
+from fastapi import UploadFile
+
 from ..core import config
 from ..core.config import CONFIG_DIR, save_yaml
 from ..core.paths import SITES_DIR
@@ -87,3 +90,44 @@ def record_analytics(name: str, bandwidth_mb: float = 0.0, error: bool = False) 
             break
     if changed:
         save_sites(sites)
+
+
+def list_site_files(name: str) -> Optional[List[Dict]]:
+    site = next((s for s in load_sites() if s.get("name") == name), None)
+    if not site:
+        return None
+    root = Path(site["root_path"])
+    if not root.exists():
+        root.mkdir(parents=True, exist_ok=True)
+    files: List[Dict] = []
+    for path in root.rglob("*"):
+        if path.is_file():
+            rel = path.relative_to(root).as_posix()
+            files.append({"path": rel, "size": path.stat().st_size})
+    return files
+
+
+async def upload_site_file(name: str, relative_path: str, upload: UploadFile) -> Dict:
+    site = next((s for s in load_sites() if s.get("name") == name), None)
+    if not site:
+        raise FileNotFoundError("site")
+    root = Path(site["root_path"])
+    target = (root / relative_path).parent
+    target.mkdir(parents=True, exist_ok=True)
+    dest = root / relative_path
+    async with aiofiles.open(dest, "wb") as outfile:
+        while chunk := await upload.read(1024 * 1024):
+            await outfile.write(chunk)
+    await upload.close()
+    return {"path": relative_path, "size": dest.stat().st_size}
+
+
+def save_site_file(name: str, relative_path: str, content: str) -> Dict:
+    site = next((s for s in load_sites() if s.get("name") == name), None)
+    if not site:
+        raise FileNotFoundError("site")
+    root = Path(site["root_path"])
+    target = root / relative_path
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(content)
+    return {"path": relative_path, "size": target.stat().st_size}

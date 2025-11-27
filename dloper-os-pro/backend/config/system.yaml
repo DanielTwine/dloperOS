@@ -2,7 +2,7 @@ instance:
   name: DloperOS Pro
   base_url: http://localhost:8000
 security:
-  secret_key: 305f6336d6d38518cad977f51340b387ccc9367750d1e5518a7856e51afe342c
+  secret_key: 7f5cc68cb6c48dd16819e763a11cec3b9147e6454b1cfe1231066b2063e6886f
   token_expiry_minutes: 90
 analytics:
   enabled: true

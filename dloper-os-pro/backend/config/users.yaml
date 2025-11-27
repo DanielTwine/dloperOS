@@ -2,5 +2,5 @@ users:
 - username: admin
   email: admin@example.com
   role: owner
-  password_hash: pbkdf2$390000$0zFN5DedjwJDd189s1NaHg==$B61bHTuHac4POjxf85LzhtA1UakOlxEjQWk4oLTFJYs=
-  created_at: '2025-11-26T17:45:17.396609'
+  password_hash: pbkdf2$390000$10Oe9Ada/fA7o5Zp2t62Ng==$FLE/nNP/j8JYR8jVVG5XJN9LCc0ankjJ5WA1Z31nygA=
+  created_at: '2025-11-27T15:29:06.463373'

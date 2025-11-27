@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Settings as SettingsIcon } from 'lucide-react';
+import { Settings as SettingsIcon, ShieldAlert } from 'lucide-react';
 import { api } from '../hooks/useApi';
 
 interface SettingsShape {
@@ -11,6 +11,10 @@ interface SettingsShape {
 export default function Settings() {
   const [settings, setSettings] = useState<SettingsShape>({});
   const [status, setStatus] = useState<string | null>(null);
+  const [resetStatus, setResetStatus] = useState<string | null>(null);
+  const [resetError, setResetError] = useState<string | null>(null);
+  const [resetPassword, setResetPassword] = useState('');
+  const [resetConfirm, setResetConfirm] = useState('');
 
   const load = async () => {
     try {
@@ -36,6 +40,26 @@ export default function Settings() {
       setStatus('Saved');
     } catch (err: any) {
       setStatus(err?.response?.data?.detail || 'Update failed');
+    }
+  };
+
+  const doReset = async () => {
+    setResetStatus(null);
+    setResetError(null);
+    if (resetConfirm.trim() !== 'I want to reset my system') {
+      setResetError('Confirmation phrase must match exactly.');
+      return;
+    }
+    try {
+      await api.post('/api/settings/reset', {
+        password: resetPassword,
+        confirmation: resetConfirm,
+      });
+      setResetStatus('System reset to defaults. Seed admin: admin/admin123.');
+      setResetPassword('');
+      setResetConfirm('');
+    } catch (err: any) {
+      setResetError(err?.response?.data?.detail || 'Reset failed');
     }
   };
 
@@ -94,6 +118,53 @@ export default function Settings() {
           </button>
           {status && <p className="text-sm text-sand/80">{status}</p>}
         </div>
+      </div>
+
+      <div className="glass p-4 rounded-xl border border-white/10 space-y-3">
+        <div className="flex items-center gap-2">
+          <ShieldAlert className="text-coral" />
+          <div>
+            <p className="text-xs uppercase tracking-[0.25em] text-coral">System reset</p>
+            <p className="text-sm text-sand/80">
+              This will wipe configs and data in dloper-os-pro (sites, files, backups). Make a backup first.
+            </p>
+          </div>
+        </div>
+        <div className="text-xs text-sand/60">
+          Type &quot;I want to reset my system&quot; and your password to continue. Seed admin resets to admin/admin123.
+        </div>
+        <div className="grid md:grid-cols-2 gap-3">
+          <div>
+            <label className="text-xs uppercase text-white/70">Password</label>
+            <input
+              type="password"
+              value={resetPassword}
+              onChange={(e) => setResetPassword(e.target.value)}
+              className="w-full mt-1 bg-white/5 border border-white/10 rounded-lg p-3"
+            />
+          </div>
+          <div>
+            <label className="text-xs uppercase text-white/70">Confirmation phrase</label>
+            <input
+              value={resetConfirm}
+              onChange={(e) => setResetConfirm(e.target.value)}
+              className="w-full mt-1 bg-white/5 border border-white/10 rounded-lg p-3"
+              placeholder="I want to reset my system"
+            />
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            className="px-4 py-3 rounded-lg bg-coral text-midnight font-semibold disabled:opacity-60"
+            onClick={doReset}
+            disabled={!resetPassword || resetConfirm.trim() !== 'I want to reset my system'}
+          >
+            Reset to defaults
+          </button>
+          <div className="text-xs text-sand/70">Tip: create a backup before resetting.</div>
+        </div>
+        {resetStatus && <p className="text-sm text-mint">{resetStatus}</p>}
+        {resetError && <p className="text-sm text-coral">{resetError}</p>}
       </div>
     </div>
   );

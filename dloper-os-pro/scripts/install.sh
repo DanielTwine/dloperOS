@@ -1,17 +1,19 @@
 #!/usr/bin/env bash
-set -e
+set -euo pipefail
 
 REPO_ROOT=$(cd "$(dirname "$0")/.." && pwd)
-VENV_DIR="$REPO_ROOT/.venv"
+BACKEND_DIR="$REPO_ROOT/backend"
+FRONTEND_DIR="$REPO_ROOT/frontend"
+VENV_DIR="$BACKEND_DIR/.venv"
 
 python3 -m venv "$VENV_DIR"
-source "$VENV_DIR/bin/activate"
-python -m pip install --upgrade pip
-pip install -r "$REPO_ROOT/backend/requirements.txt"
+"$VENV_DIR/bin/python" -m pip install --upgrade pip
+"$VENV_DIR/bin/pip" install --no-cache-dir -r "$BACKEND_DIR/requirements.txt"
 
-echo "[dloper-os-pro] Python deps installed"
+echo "[dloper-os-pro] Backend virtualenv ready at $VENV_DIR"
 
-cd "$REPO_ROOT/frontend"
-npm install
+cd "$FRONTEND_DIR"
+npm ci
+npm run build
 
-echo "[dloper-os-pro] Frontend deps installed"
+echo "[dloper-os-pro] Frontend built at $FRONTEND_DIR/dist"

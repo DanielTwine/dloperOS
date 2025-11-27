@@ -1,6 +1,6 @@
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
 
 from ..models.website import Website, WebsiteCreate, WebsiteUpdate
 from ..services import websites
@@ -42,3 +42,27 @@ def delete_site(name: str, current_user=Depends(deps.require_role("owner"))):
 def bump_analytics(name: str, error: bool = False, bandwidth_mb: float = 0.0):
     websites.record_analytics(name, bandwidth_mb=bandwidth_mb, error=error)
     return {"status": "ok"}
+
+
+@router.get("/{name}/files")
+def list_site_files(name: str, current_user=Depends(deps.get_current_user)):
+    files = websites.list_site_files(name)
+    if files is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Site not found")
+    return files
+
+
+@router.post("/{name}/files/upload")
+async def upload_site_file(name: str, path: str, upload: UploadFile, current_user=Depends(deps.require_role("owner", "admin"))):
+    try:
+        return await websites.upload_site_file(name, path, upload)
+    except FileNotFoundError:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Site or path not found")
+
+
+@router.post("/{name}/files/save")
+async def save_site_file(name: str, path: str, content: str, current_user=Depends(deps.require_role("owner", "admin"))):
+    try:
+        return websites.save_site_file(name, path, content)
+    except FileNotFoundError:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Site or path not found")
